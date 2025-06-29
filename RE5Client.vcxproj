@@ -31,8 +31,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)Build\dist\</OutDir>
-    <IntDir>$(SolutionDir)Build\</IntDir>
+    <OutDir>$(SolutionDir)build\dist\</OutDir>
+    <IntDir>$(SolutionDir)build\</IntDir>
     <TargetExt>.asi</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
