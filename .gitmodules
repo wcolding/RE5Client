@@ -1,0 +1,3 @@
+[submodule "external/RE5MemTools"]
+	path = external/RE5MemTools
+	url = https://github.com/wcolding/RE5MemTools.git
