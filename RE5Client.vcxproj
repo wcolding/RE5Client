@@ -47,13 +47,13 @@
       <LanguageStandard_C>stdclatest</LanguageStandard_C>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UseDynamicDebugging>true</UseDynamicDebugging>
-      <AdditionalIncludeDirectories>external/RE5MemTools/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>external/MinHook/include;external/RE5MemTools/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>external/RE5MemTools/build;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>RE5MemTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>external/MinHook/lib;external/RE5MemTools/build;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>RE5MemTools.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
