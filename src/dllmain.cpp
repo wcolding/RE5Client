@@ -7,6 +7,31 @@
 
 #include "RE5Text.h"
 #include "RE5Items.h"
+#include <initializer_list>
+
+template <typename T>
+T* ResolvePointer(int baseAddress, const std::initializer_list<int>& offsets)
+{
+    int curAddr = baseAddress;
+    int val = baseAddress;
+
+    for (auto offset : offsets)
+    {
+        curAddr = val + offset;
+        if (curAddr == 0)
+            return nullptr;
+        val = *reinterpret_cast<int*>(curAddr);
+    }
+
+    return reinterpret_cast<T*>(curAddr);
+}
+
+template <typename T>
+T GetValue(int baseAddress, const std::initializer_list<int>& offsets)
+{
+    T* ptr = ResolvePointer<T>(baseAddress, offsets);
+    return *(T*)ptr;
+}
 
 bool debugConsole = true;
 
@@ -39,6 +64,13 @@ _LoadItem OriginalLoadItem = nullptr;
 
 int __fastcall HookedLoadItem(void* _this, RE5MemTools::mItemSet* itemSet, RE5MemTools::mItemSet* itemSetB, int unk_01, int unk_02, int unk_03, int index, int unk_05)
 {
+    if (index == 0)
+    {
+        auto itemLot = ResolvePointer<char>(0x11B2200, { 0x0, 0x6C, 0x0, 0x4 });
+        std::string levelARC = std::string(itemLot, 10).substr(6, 4);
+        printf("Level: %s\n\n", levelARC.c_str());
+    }
+
     if (unk_03 != -1)
     {
         if (itemSet->SetType == RE5MemTools::RE5SetType::Suitcase)
@@ -65,9 +97,11 @@ int __fastcall HookedLoadItem(void* _this, RE5MemTools::mItemSet* itemSet, RE5Me
     printf("2: %X\n", (int)unk_02);
     printf("3: %X\n", (int)unk_03);
     printf("Index: %d\n", (int)index);
-    printf("5: %X\n\n", (int)unk_05);
+    printf("5: %X\n", (int)unk_05);
 
-    return OriginalLoadItem(_this, itemSet, itemSetB, unk_01, unk_02, unk_03, index, unk_05);
+    auto retVal = OriginalLoadItem(_this, itemSet, itemSetB, unk_01, unk_02, unk_03, index, unk_05);
+    printf("Return value: %X\n\n", retVal);
+    return retVal;
 }
 
 int* menuPtrA; int* menuPtrB; int* menuPtrC;
