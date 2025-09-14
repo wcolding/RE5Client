@@ -12,4 +12,6 @@ namespace RE5Client {
     };
 
      std::vector<APRE5Entry> GetAPRE5Entries();
+
+     std::vector<RE5MemTools::LocationData::Location> GetCurrentLocations(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData);
 }

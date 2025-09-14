@@ -1,6 +1,5 @@
 #include "Locations.h"
 
-#include <set>
 #include <map>
 #include <filesystem>
 
@@ -71,4 +70,25 @@ std::vector<RE5Client::APRE5Entry> RE5Client::GetAPRE5Entries() {
     }
 
     return APRE5Entries;
+}
+
+
+std::vector<RE5MemTools::LocationData::Location> RE5Client::GetCurrentLocations(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData) {
+    std::vector<RE5MemTools::LocationData::Location> currentLocations;
+
+    if (LocationMap.contains(levelARC)) {
+        auto locSet = LocationMap[levelARC];
+        if (index > (locSet.size() - 1))
+            return currentLocations;
+        int locID = locSet[index];
+        printf("ID to find: %i\n", locID);
+        
+        for (auto location : locationData) {
+            printf("Checking locID: %i\n", location.id);
+            if (location.id == locID)
+                currentLocations.push_back(location);
+        }
+    }
+
+    return currentLocations;
 }

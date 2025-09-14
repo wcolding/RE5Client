@@ -10,6 +10,11 @@
 #include "RE5Items.h"
 #include <initializer_list>
 
+std::vector<RE5Client::APRE5Entry> APRE5Entries;
+int activeAPRE5Entry = 0;
+std::string levelARC = "";
+std::vector<RE5MemTools::LocationData::Location> currentLocations;
+
 template <typename T>
 T* ResolvePointer(int baseAddress, const std::initializer_list<int>& offsets)
 {
@@ -68,24 +73,47 @@ int __fastcall HookedLoadItem(void* _this, RE5MemTools::mItemSet* itemSet, RE5Me
     if (index == 0)
     {
         auto itemLot = ResolvePointer<char>(0x11B2200, { 0x0, 0x6C, 0x0, 0x4 });
-        std::string levelARC = std::string(itemLot, 10).substr(6, 4);
+        levelARC = std::string(itemLot, 10).substr(6, 4);
         printf("Level: %s\n\n", levelARC.c_str());
+        bool apre5IsCompressed = APRE5Entries[activeAPRE5Entry].header.compressed;
+        if (apre5IsCompressed)
+        {
+            printf("Loaded APRE5 file is compressed\n");
+        } 
+        else
+        {
+            printf("Loaded APRE5 file is uncompressed\n");
+            // Refresh APRE5 file if uncompressed (hot reload)
+            RE5Client::APRE5Entry newEntry;// = APRE5Entries[activeAPRE5Entry];
+            newEntry.fileName = APRE5Entries[activeAPRE5Entry].fileName;
+    
+            int result = RE5MemTools::LocationData::DecompressJSONFromFile(newEntry.fileName, newEntry.dataJSON, newEntry.header);
+            if (result == LOC_DATA_OK) {
+                printf("Loaded json string: %s\n\n", newEntry.dataJSON.c_str());
+                //std::vector<RE5MemTools::LocationData::Location> locationData = RE5MemTools::LocationData::GetLocationData(newEntry.dataJSON);
+                //printf("APRE5 file %s refreshed\n", newEntry.fileName.c_str());
+
+                //currentLocations = RE5Client::GetCurrentLocations(levelARC, index, locationData);
+               // printf("%i locations matched from file\n\n", currentLocations.size());
+            }
+        }
     }
 
-    if (unk_03 != -1)
+
+    if ((unk_03 != -1) && (!currentLocations.empty()))
     {
         if (itemSet->SetType == RE5MemTools::RE5SetType::Suitcase)
         {
             printf("Suitcase item discovered\n");
             itemSet->AutoPosition = true;
             itemSet->NoCheckOba = true;
-            RE5MemTools::Item::SetItem(itemSet, RE5MemTools::RE5Item::FlashGrenade, -1);
+            //RE5MemTools::Item::SetItem(itemSet, static_cast<RE5MemTools::RE5Item>(currentLocations[index].item), currentLocations[index].qty);
             //itemSet->SetLotNo = -1;
             //itemSet->mPosition.z -= 100;
         }
         else {
             itemSet->SetType = static_cast<unsigned short>(RE5MemTools::RE5SetType::Spawn);
-            RE5MemTools::Item::SetItem(itemSet, RE5MemTools::RE5Item::FlashGrenade, 1);
+            //RE5MemTools::Item::SetItem(itemSet, static_cast<RE5MemTools::RE5Item>(currentLocations[index].item), currentLocations[index].qty);
         }
         
         itemSet->EffType = 1;
@@ -164,11 +192,14 @@ DWORD WINAPI ModThread(LPVOID hModule)
     else
         freopen_s(&pFile, "RE5Client_log.txt", "w", stdout);
 
-    auto entries = RE5Client::GetAPRE5Entries();
+    APRE5Entries = RE5Client::GetAPRE5Entries();
 
-    for (auto entry : entries) {
+    for (auto entry : APRE5Entries) {
         printf("Seed found: %s\nSlot name: %s\n\n", entry.header.seedName, entry.header.slotName);
     }
+
+    if (!APRE5Entries.empty())
+        activeAPRE5Entry = 0; // temporary autoselect
 
     while (true)
     {
