@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <iostream>
 #include <stdio.h>
+#include "Locations.h"
 
 #include "MinHook.h"
 
@@ -156,15 +157,18 @@ int SetupHooks()
 DWORD WINAPI ModThread(LPVOID hModule)
 {
     FILE* pFile = nullptr;
-    if (debugConsole)
-    {
+    if (debugConsole) {
         AllocConsole();
         freopen_s(&pFile, "CONOUT$", "w", stdout);
     }
     else
         freopen_s(&pFile, "RE5Client_log.txt", "w", stdout);
 
+    auto entries = RE5Client::GetAPRE5Entries();
 
+    for (auto entry : entries) {
+        printf("Seed found: %s\nSlot name: %s\n\n", entry.header.seedName, entry.header.slotName);
+    }
 
     while (true)
     {
