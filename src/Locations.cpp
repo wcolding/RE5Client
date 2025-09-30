@@ -73,22 +73,19 @@ std::vector<RE5Client::APRE5Entry> RE5Client::GetAPRE5Entries() {
 }
 
 
-std::vector<RE5MemTools::LocationData::Location> RE5Client::GetCurrentLocations(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData) {
-    std::vector<RE5MemTools::LocationData::Location> currentLocations;
-
+RE5MemTools::LocationData::Location* RE5Client::GetCurrentLocation(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData) {
     if (LocationMap.contains(levelARC)) {
         auto locSet = LocationMap[levelARC];
         if (index > (locSet.size() - 1))
-            return currentLocations;
+            return nullptr;
+
         int locID = locSet[index];
-        printf("ID to find: %i\n", locID);
         
-        for (auto location : locationData) {
-            printf("Checking locID: %i\n", location.id);
-            if (location.id == locID)
-                currentLocations.push_back(location);
+        for (int i = 0; i < locationData.size(); i++) {
+            if (locationData[i].id == locID)
+                return &locationData[i];
         }
     }
 
-    return currentLocations;
+    return nullptr;
 }
