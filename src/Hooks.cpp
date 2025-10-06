@@ -5,6 +5,7 @@
 #include <string>
 #include <format>
 
+#pragma region LoadARC
 // Original function definition and pointer to new address
 typedef void(__fastcall* _LoadARC)(ARCFileEntry* file);
 _LoadARC OriginalLoadARC = nullptr;
@@ -62,8 +63,10 @@ void __fastcall HookedLoadARC(ARCFileEntry* file)
             }
         }
     }
+
     OriginalLoadARC(file);
 }
+
 // Execute hook
 bool RE5Client::HookLoadARC()
 {
@@ -94,6 +97,7 @@ bool RE5Client::HookLoadARC()
     printf("Enabled LoadARC hook!\n");
     return true;
 }
+#pragma endregion LoadARC
 
 void RE5Client::EndMinHook()
 {
