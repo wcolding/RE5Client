@@ -50,8 +50,12 @@ std::map<std::string, std::vector<int>> LocationMap{
         { "s511", { 4861574, 4861575, 4861576, 4861577, 4861578 } },
 };
 
-std::vector<RE5Client::APRE5Entry> RE5Client::GetAPRE5Entries() {
-    std::vector<RE5Client::APRE5Entry> APRE5Entries;
+
+std::vector<RE5Client::APRE5Entry> APRE5Entries;
+int activeAPRE5Entry = 0;
+
+void RE5Client::GetAPRE5Entries() {
+    APRE5Entries.clear();
 
     for (const auto& file : std::filesystem::directory_iterator(std::filesystem::current_path()))
     {
@@ -69,9 +73,13 @@ std::vector<RE5Client::APRE5Entry> RE5Client::GetAPRE5Entries() {
         }
     }
 
-    return APRE5Entries;
+    if (!APRE5Entries.empty())
+        activeAPRE5Entry = 0;
 }
 
+RE5Client::APRE5Entry RE5Client::GetActiveEntry() {
+    return APRE5Entries[activeAPRE5Entry];
+}
 
 RE5MemTools::LocationData::Location* RE5Client::GetCurrentLocation(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData) {
     if (LocationMap.contains(levelARC)) {

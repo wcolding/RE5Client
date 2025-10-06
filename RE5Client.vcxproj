@@ -59,9 +59,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\Hooks.cpp" />
     <ClCompile Include="src\Locations.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Hooks.h" />
     <ClInclude Include="include\Locations.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

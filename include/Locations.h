@@ -4,14 +4,15 @@
 #include "RE5LocationData.h"
 
 namespace RE5Client {
-
+    
     struct APRE5Entry {
         std::string fileName;
         RE5MemTools::LocationData::APRE5Header header;
         std::string dataJSON;
     };
 
-     std::vector<APRE5Entry> GetAPRE5Entries();
+    void GetAPRE5Entries();
 
-     RE5MemTools::LocationData::Location* GetCurrentLocation(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>&locationData);
+    APRE5Entry GetActiveEntry();
+    RE5MemTools::LocationData::Location* GetCurrentLocation(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>&locationData);
 }

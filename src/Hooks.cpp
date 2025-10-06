@@ -1,0 +1,103 @@
+#include "Hooks.h"
+#include "MinHook.h"
+#include "Locations.h"
+
+#include <string>
+#include <format>
+
+// Original function definition and pointer to new address
+typedef void(__fastcall* _LoadARC)(ARCFileEntry* file);
+_LoadARC OriginalLoadARC = nullptr;
+
+// Function to execute after loading ARC file
+char partialFile[6] = "     ";
+char fileSection[5] = "    ";
+std::string levelARC = "";
+std::vector<RE5MemTools::LocationData::Location> locationData;
+void __fastcall HookedLoadARC(ARCFileEntry* file)
+{
+    memcpy(&partialFile, &file->name, 5);
+    if (strcmp(partialFile, "stage") == 0)
+    {
+        void* section = reinterpret_cast<char*>(reinterpret_cast<int>(file->name) + 21);
+        memcpy(&fileSection, section, 4);
+        if (strcmp(fileSection, "item") == 0)
+        {
+            printf("Loaded ARC file \"%s\"\n", file->name);
+            levelARC = std::string(file->name, 10).substr(6, 4);
+            printf("Level: %s\n", levelARC.c_str());
+
+            // Refresh APRE5 file if uncompressed
+            bool apre5IsCompressed = RE5Client::GetActiveEntry().header.compressed;
+            if (apre5IsCompressed)
+            {
+                printf("Loaded APRE5 file is compressed\n");
+            }
+            else
+            {
+                printf("Loaded APRE5 file is uncompressed\n");
+                RE5Client::APRE5Entry newEntry;
+                newEntry.fileName = RE5Client::GetActiveEntry().fileName;
+
+                int result = RE5MemTools::LocationData::DecompressJSONFromFile(newEntry.fileName, newEntry.dataJSON, newEntry.header);
+                if (result == LOC_DATA_OK) {
+                    locationData.clear();
+                    locationData = RE5MemTools::LocationData::GetLocationData(newEntry.dataJSON);
+                    printf("APRE5 file %s refreshed\n", newEntry.fileName.c_str());
+                }
+            }
+
+            auto itemLot = ResolvePointer<RE5Array>(0x11B2200, { 0x0, 0x6C, 0x0, 0x64 });
+            printf("Items count: %i\n", itemLot->count);
+            printf("Data addr: %x\n", itemLot->data);
+            for (int i = 0; i < itemLot->count; i++)
+            {
+                auto curEntry = reinterpret_cast<RE5ItemEntry*>(*reinterpret_cast<int**>(reinterpret_cast<int>(itemLot->data) + 4 * i));
+                auto curLocData = RE5Client::GetCurrentLocation(levelARC, i, locationData);
+                if (curLocData != nullptr)
+                {
+                    curEntry->mpInfo->mItemSet.ItemId = curLocData->item;
+                    curEntry->mpInfo->mItemSet.ItemNum = curLocData->qty;
+                    printf("Setting location %i to %i (%i)\n", curLocData->id, curLocData->item, curLocData->qty);
+                }
+            }
+        }
+    }
+    OriginalLoadARC(file);
+}
+// Execute hook
+bool RE5Client::HookLoadARC()
+{
+    if (MH_Initialize() != MH_OK)
+        return false;
+
+    printf("Initialized MinHook!\n");
+
+    LPVOID InjectPoint = reinterpret_cast<LPVOID>(0x44F380);
+
+    if (MH_CreateHook(InjectPoint, &HookedLoadARC, reinterpret_cast<LPVOID*>(&OriginalLoadARC)) != MH_OK)
+    {
+        printf("Couldn't create LoadARC hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Created LoadARC hook!\n");
+    printf(std::format("Original LoadARC: {:8X}\n", (int)OriginalLoadARC).c_str());
+
+    if (MH_EnableHook(InjectPoint) != MH_OK)
+    {
+        printf("Couldn't enable LoadARC hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Enabled LoadARC hook!\n");
+    return true;
+}
+
+void RE5Client::EndMinHook()
+{
+    MH_DisableHook(MH_ALL_HOOKS);
+    MH_Uninitialize();
+}

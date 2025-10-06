@@ -21,9 +21,15 @@
     <ClCompile Include="src\Locations.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Hooks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Locations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Hooks.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
