@@ -56,8 +56,7 @@ void __fastcall HookedLoadARC(ARCFileEntry* file)
                 auto curLocData = RE5Client::GetCurrentLocation(levelARC, i, locationData);
                 if (curLocData != nullptr)
                 {
-                    curEntry->mpInfo->mItemSet.ItemId = curLocData->item;
-                    curEntry->mpInfo->mItemSet.ItemNum = curLocData->qty;
+                    RE5MemTools::Item::SetItem(&curEntry->mpInfo->mItemSet, static_cast<RE5MemTools::RE5Item>(curLocData->item), curLocData->qty);
                     printf("Setting location %i to %i (%i)\n", curLocData->id, curLocData->item, curLocData->qty);
                 }
             }
