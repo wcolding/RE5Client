@@ -49,7 +49,9 @@ T GetValue(int baseAddress, const std::initializer_list<int>& offsets)
 }
 
 namespace RE5Client {
-   
+    void StartMinHook();
     bool HookLoadARC();
+    bool HookInstantiatePickup();
+    bool HookPickup();
     void EndMinHook();
 }

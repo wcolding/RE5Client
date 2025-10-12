@@ -4,6 +4,11 @@
 
 #include <string>
 #include <format>
+#include <map>
+
+bool minhookInitialized = false;
+
+std::map<int, int> CurrentLocationsMap;
 
 #pragma region LoadARC
 // Original function definition and pointer to new address
@@ -70,10 +75,8 @@ void __fastcall HookedLoadARC(ARCFileEntry* file)
 // Execute hook
 bool RE5Client::HookLoadARC()
 {
-    if (MH_Initialize() != MH_OK)
+    if (!minhookInitialized)
         return false;
-
-    printf("Initialized MinHook!\n");
 
     LPVOID InjectPoint = reinterpret_cast<LPVOID>(0x44F380);
 
@@ -98,6 +101,121 @@ bool RE5Client::HookLoadARC()
     return true;
 }
 #pragma endregion LoadARC
+
+#pragma region InstantiatePickup
+// Original function definition and pointer to new address
+typedef int(__fastcall* _InstantiatePickup)(void* _this, int index, void* copyTarget);
+_InstantiatePickup OriginalInstantiatePickup = nullptr;
+
+// Function to execute before instantiating Pickup
+int __fastcall HookedInstantiatePickup(void* _this, int index, void* copyTarget)
+{
+    if (index == 0) {
+        CurrentLocationsMap.clear();
+    }
+
+    //printf("%x, %x, %x\n", _this, index, copyTarget);
+    int locID = RE5Client::GetLocationID(levelARC, index);
+    if (locID != -1) {
+        CurrentLocationsMap[reinterpret_cast<int>(_this)] = locID;
+        printf("Mapped location id %i to item at %x\n", locID, _this);
+    }
+    return OriginalInstantiatePickup(_this, index, copyTarget);
+}
+
+// Execute hook
+bool RE5Client::HookInstantiatePickup()
+{
+    if (!minhookInitialized)
+        return false;
+
+    LPVOID InjectPoint = reinterpret_cast<LPVOID>(0xA784B0);
+
+    if (MH_CreateHook(InjectPoint, &HookedInstantiatePickup, reinterpret_cast<LPVOID*>(&OriginalInstantiatePickup)) != MH_OK)
+    {
+        printf("Couldn't create InstantiatePickup hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Created InstantiatePickup hook!\n");
+    printf(std::format("Original InstantiatePickup: {:8X}\n", (int)OriginalInstantiatePickup).c_str());
+
+    if (MH_EnableHook(InjectPoint) != MH_OK)
+    {
+        printf("Couldn't enable InstantiatePickup hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Enabled InstantiatePickup hook!\n");
+    return true;
+}
+#pragma endregion InstantiatePickup
+
+#pragma region Pickup
+// Original function definition and pointer to new address
+typedef void(*_Pickup)();
+_Pickup OriginalPickup = nullptr;
+
+int itemAddr;
+int pickupReturn = 0xC7F8B9;
+int pickupAPLoc = 0;
+
+// Function to execute before Pickup
+__declspec(naked) void HookedPickup()
+{
+    _asm {
+        //pushad;
+        mov itemAddr, eax;
+    }
+
+    if (CurrentLocationsMap.contains(itemAddr)) {
+        pickupAPLoc = CurrentLocationsMap[itemAddr];
+        printf("Checked item at APlocation %i\n", pickupAPLoc);
+    }
+
+    _asm jmp pickupReturn;
+}
+
+// Execute hook
+bool RE5Client::HookPickup()
+{
+    if (!minhookInitialized)
+        return false;
+
+    LPVOID InjectPoint = reinterpret_cast<LPVOID>(0xC7F8B2);
+
+    if (MH_CreateHook(InjectPoint, &HookedPickup, reinterpret_cast<LPVOID*>(&OriginalPickup)) != MH_OK)
+    {
+        printf("Couldn't create Pickup hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Created Pickup hook!\n");
+    printf(std::format("Original Pickup: {:8X}\n", (int)OriginalPickup).c_str());
+
+    if (MH_EnableHook(InjectPoint) != MH_OK)
+    {
+        printf("Couldn't enable Pickup hook\n");
+        MH_Uninitialize();
+        return false;
+    }
+
+    printf("Enabled Pickup hook!\n");
+    return true;
+}
+#pragma endregion Pickup
+
+void RE5Client::StartMinHook()
+{
+    minhookInitialized = (MH_Initialize() == MH_OK);
+    if (minhookInitialized)
+        printf("Initialized MinHook!\n");
+    else
+        printf("Unable to initialize MinHook!\n");
+}
 
 void RE5Client::EndMinHook()
 {

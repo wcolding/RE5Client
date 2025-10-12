@@ -81,6 +81,15 @@ RE5Client::APRE5Entry RE5Client::GetActiveEntry() {
     return APRE5Entries[activeAPRE5Entry];
 }
 
+
+int RE5Client::GetLocationID(std::string levelARC, int index) {
+    if (LocationMap.contains(levelARC)) {
+        if (LocationMap[levelARC].size() <= index)
+            return -1;
+        return LocationMap[levelARC][index];
+    }
+}
+
 RE5MemTools::LocationData::Location* RE5Client::GetCurrentLocation(std::string levelARC, int index, std::vector<RE5MemTools::LocationData::Location>& locationData) {
     if (LocationMap.contains(levelARC)) {
         auto locSet = LocationMap[levelARC];

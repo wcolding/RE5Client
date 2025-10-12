@@ -59,15 +59,19 @@ DWORD WINAPI ModThread(LPVOID hModule)
         freopen_s(&pFile, "RE5Client_log.txt", "w", stdout);
 
     RE5Client::GetAPRE5Entries();
+    Sleep(1000);
+    RE5Client::StartMinHook();
+    RE5Client::HookLoadARC();
+    RE5Client::HookInstantiatePickup();
+    RE5Client::HookPickup();
 
     while (true)
     {
         //if (GetAsyncKeyState(VK_HOME) & 0x01)
         
-        if (GetAsyncKeyState(VK_NEXT) & 0x01)
+        /*if (GetAsyncKeyState(VK_NEXT) & 0x01)
         {
-            RE5Client::HookLoadARC();
-        }
+        }*/
 
         if (GetAsyncKeyState(VK_END) & 0x01)
         {
