@@ -25,9 +25,9 @@ void __fastcall HookedLoadARC(ARCFileEntry* file)
     memcpy(&partialFile, &file->name, 5);
     if (strcmp(partialFile, "stage") == 0)
     {
-        void* section = reinterpret_cast<char*>(reinterpret_cast<int>(file->name) + 21);
-        memcpy(&fileSection, section, 4);
-        if (strcmp(fileSection, "item") == 0)
+        std::string fileName = std::string(file->name);
+
+        if ((fileName.find("_item") != std::string::npos) || (fileName.find("_Item") != std::string::npos))
         {
             printf("Loaded ARC file \"%s\"\n", file->name);
             levelARC = std::string(file->name, 10).substr(6, 4);
